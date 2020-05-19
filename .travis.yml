@@ -1,0 +1,21 @@
+sudo: required
+
+services:
+    - docker
+
+before_install:
+    - docker build -t jenka13all/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true jenka13all/react-test npm test
+
+after_success:
+    - docker build -t jenka13all/multi-client ./client
+    - docker build -t jenka13all/multi-nginx ./nginx
+    - docker build -t jenka13all/multi-server ./server
+    - docker build -t jenka13all/multi-worker ./worker
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    - docker push jenka13all/multi-client
+    - docker push jenka13all/multi-nginx
+    - docker push jenka13all/multi-server
+    - docker push jenka13all/multi-worker
